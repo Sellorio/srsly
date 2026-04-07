@@ -1,10 +1,8 @@
 <Solution>
-  <Folder Name="/Solution Items/">
-    <File Path=".gitignore" />
-  </Folder>
-  <Project Path="docker-compose.dcproj">
-    <Build />
-  </Project>
+  <Project Path="Sellorio.Srsly.Data/Sellorio.Srsly.Data.csproj" />
+  <Project Path="Sellorio.Srsly.Models/Sellorio.Srsly.Models.csproj" Id="ff222d56-7d5d-455f-a655-ffd1a507f5c3" />
+  <Project Path="Sellorio.Srsly.ServiceInterfaces/Sellorio.Srsly.ServiceInterfaces.csproj" Id="0fbee82d-a029-492b-841e-ec6f6e4c773c" />
+  <Project Path="Sellorio.Srsly.Services/Sellorio.Srsly.Services.csproj" Id="2059becf-db9c-47f7-9a0a-fcbab6decb73" />
   <Project Path="Sellorio.Srsly.Web.Client/Sellorio.Srsly.Web.Client.csproj" />
   <Project Path="Sellorio.Srsly.Web/Sellorio.Srsly.Web.csproj" />
 </Solution>
