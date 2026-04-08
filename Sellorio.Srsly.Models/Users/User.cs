@@ -1,3 +1,5 @@
+using System;
+
 namespace Sellorio.Srsly.Models.Users;
 
 public class User
