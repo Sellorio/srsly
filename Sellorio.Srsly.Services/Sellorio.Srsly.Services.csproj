@@ -8,13 +8,13 @@
   <ItemGroup>
     <PackageReference Include="Microsoft.Extensions.Options" Version="10.0.5" />
     <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" Version="10.0.5" />
-    <PackageReference Include="Sellorio.Results" Version="1.0.0-alpha.5" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" Version="8.14.0" />
+    <PackageReference Include="Sellorio.AutoMapping" Version="$(SellorioPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Sellorio.Srsly.Data\Sellorio.Srsly.Data.csproj" />
-    <ProjectReference Include="..\Sellorio.Srsly.Models\Sellorio.Srsly.Models.csproj" />
+    <ProjectReference Include="..\Sellorio.Srsly.ServiceInterfaces\Sellorio.Srsly.ServiceInterfaces.csproj" />
   </ItemGroup>
 
 </Project>

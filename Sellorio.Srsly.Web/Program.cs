@@ -44,6 +44,7 @@ builder.Services
             RoleClaimType = System.Security.Claims.ClaimTypes.Role,
             ClockSkew = TimeSpan.FromMinutes(1)
         };
+
         options.Events = new JwtBearerEvents
         {
             OnMessageReceived = context =>
@@ -87,6 +88,7 @@ else
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 app.UseHttpsRedirection();
 

@@ -5,4 +5,8 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Sellorio.Validation" Version="$(SellorioPackageVersion)" />
+  </ItemGroup>
+
 </Project>

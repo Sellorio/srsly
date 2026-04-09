@@ -1,6 +1,19 @@
-﻿@inherits LayoutComponentBase
+﻿@using Sellorio.Blazor.Components.Layout
+@using Sellorio.Blazor.Components.Nav
+@inherits LayoutComponentBase
 
-@Body
+<AoPageLayout ApplicationName="SRSly">
+    <NavContent>
+        <AoNavItem Href="/decks" Label="Decks" />
+    </NavContent>
+    <ChildContent>
+        <AoCenter Horizontal>
+            <div style="width:100%;max-width:1600px">
+                @Body
+            </div>
+        </AoCenter>
+    </ChildContent>
+</AoPageLayout>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.

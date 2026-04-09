@@ -12,10 +12,11 @@ using Sellorio.Results;
 using Sellorio.Results.Messages;
 using Sellorio.Srsly.Data;
 using Sellorio.Srsly.Models.Users;
+using System.Linq;
 
 namespace Sellorio.Srsly.Services.Users;
 
-public class AuthenticationService(DatabaseContext databaseContext, IOptions<JwtAuthenticationOptions> jwtAuthenticationOptions) : IAuthenticationService
+internal class AuthenticationService(DatabaseContext databaseContext, IOptions<JwtAuthenticationOptions> jwtAuthenticationOptions, IMapper mapper) : IAuthenticationService
 {
     private const string PasswordHashAlgorithm = "PBKDF2-SHA512-V1";
     private const int MinimumIterations = 100_000;
@@ -34,13 +35,13 @@ public class AuthenticationService(DatabaseContext databaseContext, IOptions<Jwt
         return user;
     }
 
-    public async Task<AuthenticationResponse?> AuthenticateWithTokenAsync(string username, string password)
+    public async Task<ValueResult<Login>> AuthenticateWithTokenAsync(string username, string password)
     {
-        var user = await AuthenticateUserInternalAsync(username, password);
+        var result = await AuthenticateUserInternalAsync(username, password);
 
-        if (user is null)
+        if (!result.WasSuccess)
         {
-            return null;
+            return ValueResult<Login>.Failure(result.Messages);
         }
 
         var jwtOptions = jwtAuthenticationOptions.Value;
@@ -53,42 +54,37 @@ public class AuthenticationService(DatabaseContext databaseContext, IOptions<Jwt
         var issuedAtUtc = DateTimeOffset.UtcNow;
         var expiresAtUtc = issuedAtUtc.AddMinutes(jwtOptions.TokenLifetimeMinutes);
         var signingKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.SigningKey));
-        var token = new JwtSecurityToken(
-            issuer: jwtOptions.Issuer,
-            audience: jwtOptions.Audience,
-            claims:
-            [
-                new Claim(JwtRegisteredClaimNames.Sub, user.Id.ToString()),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(JwtRegisteredClaimNames.UniqueName, user.Username),
-                new Claim(ClaimTypes.Email, user.Email),
-                new Claim(JwtRegisteredClaimNames.Email, user.Email),
-                new Claim(JwtAuthenticationOptions.StatusClaimType, user.Status.ToString())
-            ],
-            notBefore: issuedAtUtc.UtcDateTime,
-            expires: expiresAtUtc.UtcDateTime,
-            signingCredentials: new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256));
+        var token =
+            new JwtSecurityToken(
+                issuer: jwtOptions.Issuer,
+                audience: jwtOptions.Audience,
+                claims:
+                [
+                    new Claim(JwtRegisteredClaimNames.Sub, result.Value.Id.ToString()),
+                    new Claim(ClaimTypes.NameIdentifier, result.Value.Id.ToString()),
+                    new Claim(ClaimTypes.Name, result.Value.Username),
+                    new Claim(JwtRegisteredClaimNames.UniqueName, result.Value.Username),
+                    new Claim(ClaimTypes.Email, result.Value.Email),
+                    new Claim(JwtRegisteredClaimNames.Email, result.Value.Email),
+                    new Claim(JwtAuthenticationOptions.StatusClaimType, result.Value.Status.ToString())
+                ],
+                notBefore: issuedAtUtc.UtcDateTime,
+                expires: expiresAtUtc.UtcDateTime,
+                signingCredentials: new SigningCredentials(signingKey, SecurityAlgorithms.HmacSha256));
 
-        return new AuthenticationResponse
+        return new Login
         {
             Token = new JwtSecurityTokenHandler().WriteToken(token),
             ExpiresAtUtc = expiresAtUtc,
-            User = new AuthenticatedUser
-            {
-                Id = user.Id,
-                Username = user.Username,
-                Email = user.Email,
-                Status = user.Status
-            }
+            User = result.Value
         };
     }
 
-    private async Task<User?> AuthenticateUserInternalAsync(string username, string password)
+    private async Task<ValueResult<User>> AuthenticateUserInternalAsync(string username, string password)
     {
         if (string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(password))
         {
-            return null;
+            return ResultMessage.Error("Username and password are required.");
         }
 
         var userData =
@@ -96,21 +92,14 @@ public class AuthenticationService(DatabaseContext databaseContext, IOptions<Jwt
                 .AsNoTracking()
                 .SingleOrDefaultAsync(x => x.Username == username);
 
-        if (userData is null || !VerifyPasswordHash(userData.Username, password, userData.PasswordHash))
+        if (userData is null ||
+            userData.Status != UserStatus.Verified ||
+            !VerifyPasswordHash(userData.Username, password, userData.PasswordHash))
         {
-            return null;
+            return ResultMessage.Error("Incorrect username or password.");
         }
 
-        return new User
-        {
-            Id = userData.Id,
-            Username = userData.Username,
-            Email = userData.Email,
-            PasswordHash = userData.PasswordHash,
-            Status = userData.Status,
-            CreatedAt = userData.CreatedAt,
-            VerifiedAt = userData.VerifiedAt
-        };
+        return mapper.Map(userData);
     }
 
     public ValueResult<string> GeneratePasswordHash(string username, string password)
@@ -128,7 +117,12 @@ public class AuthenticationService(DatabaseContext databaseContext, IOptions<Jwt
         var salt = RandomNumberGenerator.GetBytes(SaltSize);
         var hash = HashPassword(username, password, salt, MinimumIterations, HashSize);
 
-        return ValueResult.Success($"{PasswordHashAlgorithm}${MinimumIterations.ToString(CultureInfo.InvariantCulture)}${Convert.ToBase64String(salt)}${Convert.ToBase64String(hash)}");
+        return
+            ValueResult.Success(
+                PasswordHashAlgorithm +
+                MinimumIterations.ToString(CultureInfo.InvariantCulture) +
+                Convert.ToBase64String(salt) +
+                Convert.ToBase64String(hash));
     }
 
     private static byte[] HashPassword(string username, string password, byte[] salt, int iterations, int outputSize)
@@ -177,7 +171,7 @@ public class AuthenticationService(DatabaseContext databaseContext, IOptions<Jwt
             return false;
         }
 
-        if (salt.Length != SaltSize || expectedHash.Length == 0)
+        if (salt.Length != SaltSize || !expectedHash.Any())
         {
             return false;
         }

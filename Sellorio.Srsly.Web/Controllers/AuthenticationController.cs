@@ -4,6 +4,8 @@ using Microsoft.AspNetCore.Mvc;
 using System.Threading.Tasks;
 using Sellorio.Srsly.Models.Users;
 using Sellorio.Srsly.Services.Users;
+using System.Net;
+using Sellorio.Extensions.AspNetCore;
 
 namespace Sellorio.Srsly.Web.Controllers;
 
@@ -13,31 +15,28 @@ public class AuthenticationController(IAuthenticationService authenticationServi
 {
     [AllowAnonymous]
     [HttpPost("login")]
-    public async Task<ActionResult<AuthenticationResponse>> Login([FromBody] AuthenticationRequest request)
+    public async Task<IActionResult> LoginAsync([FromBody] LoginPost request)
     {
-        var authenticationResponse = await authenticationService.AuthenticateWithTokenAsync(request.Username, request.Password);
+        var authenticationResult = await authenticationService.AuthenticateWithTokenAsync(request.Username, request.Password);
 
-        if (authenticationResponse is null)
+        if (!authenticationResult.WasSuccess)
         {
-            return Unauthorized(new ProblemDetails
-            {
-                Title = "Invalid username or password."
-            });
+            return authenticationResult.ToActionResult(failureStatusCode: HttpStatusCode.Unauthorized);
         }
 
         Response.Cookies.Append(
             JwtAuthenticationOptions.CookieName,
-            authenticationResponse.Token,
+            authenticationResult.Value.Token,
             new CookieOptions
             {
                 HttpOnly = true,
                 Secure = Request.IsHttps,
                 SameSite = SameSiteMode.Strict,
-                Expires = authenticationResponse.ExpiresAtUtc,
+                Expires = authenticationResult.Value.ExpiresAtUtc,
                 IsEssential = true
             });
 
-        return authenticationResponse;
+        return authenticationResult.ToActionResult();
     }
 
     [AllowAnonymous]

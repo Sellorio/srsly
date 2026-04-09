@@ -5,4 +5,12 @@
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Sellorio.Results" Version="$(SellorioPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Sellorio.Srsly.Models\Sellorio.Srsly.Models.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,36 +1,32 @@
 ﻿using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
-using Sellorio.Srsly.Models.Users;
-using Sellorio.Srsly.Services.Users;
+using Sellorio.Extensions.AspNetCore;
+using Sellorio.Results;
+using Sellorio.Srsly.ServiceInterfaces.Users;
 
 namespace Sellorio.Srsly.Web.Controllers;
 
 [Authorize]
 [ApiController]
 [Route("api/users")]
-public class UserController : ControllerBase
+public class UserController(IUserService userService) : ControllerBase
 {
     [HttpGet("me")]
-    public ActionResult<AuthenticatedUser> GetCurrentUser()
+    public Task<IActionResult> GetMeIdAsync()
     {
-        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value;
-        var username = User.Identity?.Name;
-        var email = User.FindFirst(System.Security.Claims.ClaimTypes.Email)?.Value;
+        var userId = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value;
+        return userService.GetUserAsync(Guid.Parse(userId)).ToActionResultAsync();
+    }
 
-        if (!Guid.TryParse(userId, out var id) || string.IsNullOrWhiteSpace(username) || string.IsNullOrWhiteSpace(email))
-        {
-            return Unauthorized();
-        }
-
-        _ = Enum.TryParse<UserStatus>(User.FindFirst(JwtAuthenticationOptions.StatusClaimType)?.Value, out var status);
-
-        return new AuthenticatedUser
-        {
-            Id = id,
-            Username = username,
-            Email = email,
-            Status = status
-        };
+    [HttpGet("me/id")]
+    public IActionResult GetMeId()
+    {
+        // This can be used to efficiently validate that the user has a valid session
+        return
+            ValueResult.Success(
+                User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
+                    .ToActionResult();
     }
 }

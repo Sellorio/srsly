@@ -13,7 +13,7 @@ namespace Sellorio.Srsly.Web.Client.Services;
 public class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : AuthenticationStateProvider
 {
     private const string TokenStorageKey = "srsly-auth-token";
-    private static readonly ClaimsPrincipal Anonymous = new(new ClaimsIdentity());
+    private static readonly ClaimsPrincipal _anonymous = new(new ClaimsIdentity());
 
     public override async Task<AuthenticationState> GetAuthenticationStateAsync()
     {
@@ -21,7 +21,7 @@ public class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : Authenticati
 
         if (string.IsNullOrWhiteSpace(token))
         {
-            return new AuthenticationState(Anonymous);
+            return new AuthenticationState(_anonymous);
         }
 
         var claims = ParseClaims(token);
@@ -29,7 +29,7 @@ public class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : Authenticati
         if (IsExpired(claims))
         {
             await ClearAuthenticationStateAsync();
-            return new AuthenticationState(Anonymous);
+            return new AuthenticationState(_anonymous);
         }
 
         return new AuthenticationState(new ClaimsPrincipal(new ClaimsIdentity(claims, "jwt")));
@@ -70,15 +70,16 @@ public class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : Authenticati
         {
         }
 
-        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(Anonymous)));
+        NotifyAuthenticationStateChanged(Task.FromResult(new AuthenticationState(_anonymous)));
     }
 
     private static bool IsExpired(IReadOnlyCollection<Claim> claims)
     {
-        var expClaim = claims.FirstOrDefault(claim => claim.Type == "exp")?.Value;
+        var expClaim = claims.FirstOrDefault(x => x.Type == "exp")?.Value;
 
-        return long.TryParse(expClaim, NumberStyles.None, CultureInfo.InvariantCulture, out var expiration)
-            && DateTimeOffset.FromUnixTimeSeconds(expiration) <= DateTimeOffset.UtcNow;
+        return
+            long.TryParse(expClaim, NumberStyles.None, CultureInfo.InvariantCulture, out var expiration) &&
+            DateTimeOffset.FromUnixTimeSeconds(expiration) <= DateTimeOffset.UtcNow;
     }
 
     private static IReadOnlyCollection<Claim> ParseClaims(string token)
@@ -90,11 +91,12 @@ public class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : Authenticati
             return [];
         }
 
-        var payload = tokenParts[1]
-            .Replace('-', '+')
-            .Replace('_', '/');
+        var payload =
+            tokenParts[1]
+                .Replace('-', '+')
+                .Replace('_', '/');
 
-        payload = payload.PadRight(payload.Length + ((4 - payload.Length % 4) % 4), '=');
+        payload = payload.PadRight(payload.Length + (4 - payload.Length % 4) % 4, '=');
 
         var payloadBytes = Convert.FromBase64String(payload);
         var payloadData = JsonSerializer.Deserialize<Dictionary<string, JsonElement>>(payloadBytes);
