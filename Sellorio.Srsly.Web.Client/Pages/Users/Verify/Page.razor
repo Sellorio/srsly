@@ -1,0 +1,41 @@
+﻿@page "/verify"
+@using Sellorio.Results
+@using Sellorio.Results.Messages
+@using Sellorio.Srsly.ServiceInterfaces.Users
+@layout LoginLayout
+@inject NavigationManager NavigationManager
+@inject IUserService UserService
+
+<AoPanel Mode="PanelMode.Form">
+	@if (verifyResult is null)
+	{
+		<AoBoxLoader Loading />
+	}
+	else
+	{
+		<AoResultMessages Result="verifyResult" />
+	}
+</AoPanel>
+
+@code {
+	Result? verifyResult;
+
+	[Parameter]
+	public string? Code { get; set; }
+
+	protected override async Task OnInitializedAsync()
+	{
+		if (string.IsNullOrEmpty(Code))
+		{
+			verifyResult = ResultMessage.Error("Verification code is missing.");
+			return;
+		}
+
+		verifyResult = await UserService.VerifyAsync(Code);
+
+		if (verifyResult.WasSuccess)
+		{
+			NavigationManager.NavigateTo("/login");
+		}
+	}
+}

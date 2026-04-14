@@ -13,4 +13,14 @@ internal class UserService(IRestClient restClient) : IUserService
     {
         return restClient.Get($"/api/users/{id}").ToValueResult<User>();
     }
+
+    public Task<Result<UserPost>> RegisterAsync(UserPost user)
+    {
+        return restClient.Post("/api/users", user).ToResult<UserPost>();
+    }
+
+    public Task<Result> VerifyAsync(string verificationCode)
+    {
+        return restClient.Post($"/api/users/verify?code={verificationCode}").ToResult();
+    }
 }

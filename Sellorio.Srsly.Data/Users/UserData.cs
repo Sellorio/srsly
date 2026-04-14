@@ -27,6 +27,6 @@ public class UserData
     public required UserStatus Status { get; set; }
 
     public required DateTimeOffset CreatedAt { get; set; }
-    public required DateTimeOffset? VerifiedAt { get; set; }
+    public DateTimeOffset? VerifiedAt { get; set; }
 }
 

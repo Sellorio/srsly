@@ -1,0 +1,64 @@
+﻿@page "/register"
+@using Sellorio.Results
+@using Sellorio.Srsly.Models.Users
+@using Sellorio.Srsly.ServiceInterfaces.Users
+@layout LoginLayout
+@inject NavigationManager NavigationManager
+@inject IUserService UserService
+
+<AoPanel Mode="PanelMode.Form">
+	<AoHeading2>Register</AoHeading2>
+
+	@if (registerResult is null || !registerResult.WasSuccess)
+	{
+		<AoForm>
+			<AoTextField Label="Username" @bind-Value="username" Required MaxLength="50" />
+			<AoTextField Label="Email" @bind-Value="email" Required MaxLength="150" />
+			<AoPasswordField Label="Password" @bind-Value="password" Required MaxLength="50" />
+			<AoResultMessages Result="registerResult" />
+			<AoFormButtons>
+				<AoCenter Vertical>
+					<AoSubmit Label="Register" />
+					or
+					<AoButton Label="Login" NoBackground OnClick="GoToLogin" Disabled="isRegistering" />
+				</AoCenter>
+			</AoFormButtons>
+		</AoForm>
+	}
+	else
+	{
+		<AoResultMessages Result="registerResult" />
+	}
+</AoPanel>
+
+@code {
+	string? username;
+	string? email;
+	string? password;
+	Result<UserPost>? registerResult;
+	bool isRegistering;
+
+	void GoToLogin()
+	{
+		NavigationManager.NavigateTo("/login");
+	}
+
+	async Task RegisterAsync()
+	{
+		if (username is null || email is null || password is null)
+		{
+			return;
+		}
+
+		isRegistering = true;
+		registerResult =
+			await UserService.RegisterAsync(new()
+			{
+				Username = username,
+				Email = email,
+				Password = password
+			})
+			.WithSuccessMessageAsync("Registration successful! Contact the server administrator for instructions on how to activate your account.");
+		isRegistering = false;
+	}
+}

@@ -8,4 +8,6 @@ namespace Sellorio.Srsly.ServiceInterfaces.Users;
 public interface IUserService
 {
     Task<ValueResult<User>> GetUserAsync(Guid id);
+    Task<Result<UserPost>> RegisterAsync(UserPost user);
+    Task<Result> VerifyAsync(string verificationCode);
 }

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Sellorio.Extensions.AspNetCore;
 using Sellorio.Results;
+using Sellorio.Srsly.Models.Users;
 using Sellorio.Srsly.ServiceInterfaces.Users;
 
 namespace Sellorio.Srsly.Web.Controllers;
@@ -28,5 +29,19 @@ public class UserController(IUserService userService) : ControllerBase
             ValueResult.Success(
                 User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)?.Value)
                     .ToActionResult();
+    }
+
+    [AllowAnonymous]
+    [HttpPost]
+    public Task<IActionResult> RegisterAsync(UserPost user)
+    {
+        return userService.RegisterAsync(user).ToActionResultAsync();
+    }
+
+    [AllowAnonymous]
+    [HttpPost("verify")]
+    public Task<IActionResult> VerifyAsync(string code)
+    {
+        return userService.VerifyAsync(code).ToActionResultAsync();
     }
 }

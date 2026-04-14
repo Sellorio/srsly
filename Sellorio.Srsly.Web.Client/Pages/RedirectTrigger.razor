@@ -1,0 +1,11 @@
+﻿@inject NavigationManager NavigationManager
+
+@code {
+    [Parameter, EditorRequired]
+    public required string Href { get; set; }
+
+    protected override void OnInitialized()
+    {
+        NavigationManager.NavigateTo(Href);
+    }
+}

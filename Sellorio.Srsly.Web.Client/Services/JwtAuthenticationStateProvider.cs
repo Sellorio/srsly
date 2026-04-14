@@ -2,15 +2,17 @@ using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
+using System.Net.Http.Headers;
 using System.Security.Claims;
 using System.Text.Json;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Components.Authorization;
 using Microsoft.JSInterop;
+using Sellorio.Clients.Rest;
 
 namespace Sellorio.Srsly.Web.Client.Services;
 
-public class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : AuthenticationStateProvider
+public class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : AuthenticationStateProvider, IRestClientAuthorizationProvider
 {
     private const string TokenStorageKey = "srsly-auth-token";
     private static readonly ClaimsPrincipal _anonymous = new(new ClaimsIdentity());
@@ -49,6 +51,13 @@ public class JwtAuthenticationStateProvider(IJSRuntime jsRuntime) : Authenticati
         {
             return null;
         }
+    }
+
+    public async Task<AuthenticationHeaderValue?> GetAuthorizationHeaderAsync()
+    {
+        var token = await GetTokenAsync();
+
+        return string.IsNullOrWhiteSpace(token) ? null : new AuthenticationHeaderValue("Bearer", token);
     }
 
     public async Task SetAuthenticationStateAsync(string token)

@@ -2,6 +2,8 @@
 
 # This stage is used when running from VS in fast mode (Default for Debug configuration)
 FROM mcr.microsoft.com/dotnet/aspnet:10.0-alpine AS base
+USER root
+RUN mkdir -p /data && chown -R $APP_UID /data
 USER $APP_UID
 WORKDIR /app
 EXPOSE 8080

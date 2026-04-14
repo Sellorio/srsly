@@ -1,11 +1,19 @@
 ﻿@using Sellorio.Blazor.Components.Layout
+@using Sellorio.Srsly.Web.Client.Pages
 @inherits LayoutComponentBase
 
-<AoPageLayout ApplicationName="SRSly" NoPadding>
-    <AoCenter Horizontal Vertical>
-        @Body
-    </AoCenter>
-</AoPageLayout>
+<AuthorizeView>
+    <Authorized>
+        <RedirectTrigger Href="/" />
+    </Authorized>
+    <NotAuthorized>
+        <AoPageLayout ApplicationName="SRSly" NoPadding>
+            <AoCenter Horizontal Vertical>
+                @Body
+            </AoCenter>
+        </AoPageLayout>
+    </NotAuthorized>
+</AuthorizeView>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.

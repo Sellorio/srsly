@@ -9,4 +9,8 @@
     <PackageReference Include="Sellorio.Validation" Version="$(SellorioPackageVersion)" />
   </ItemGroup>
 
+  <ItemGroup>
+    <ProjectReference Include="..\Sellorio.Srsly.Models\Sellorio.Srsly.Models.csproj" />
+  </ItemGroup>
+
 </Project>

@@ -1,6 +1,8 @@
 using System;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Data.Sqlite;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.EntityFrameworkCore;
@@ -12,6 +14,8 @@ using Sellorio.Srsly.Data;
 using Sellorio.Srsly.Services;
 using Sellorio.Srsly.Services.Users;
 using Sellorio.Srsly.Web.Components;
+using Sellorio.Srsly.Web.Services;
+using Sellorio.Blazor.Components;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -23,6 +27,8 @@ builder.Services.AddRazorComponents()
 builder.Services.AddCascadingAuthenticationState();
 builder.Services.AddAuthorization();
 builder.Services.AddControllers();
+builder.Services.AddHttpContextAccessor();
+builder.Services.AddScoped<Sellorio.Srsly.Web.Client.Services.IAuthenticationService, AuthenticationService>();
 
 var jwtAuthenticationOptions = builder.Configuration.GetSection(JwtAuthenticationOptions.SectionName).Get<JwtAuthenticationOptions>() ?? new JwtAuthenticationOptions();
 
@@ -59,11 +65,14 @@ builder.Services
         };
     });
 
-var connectionString = builder.Configuration.GetConnectionString("DefaultConnection") ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
+var connectionString =
+    builder.Configuration.GetConnectionString("DefaultConnection")
+        ?? throw new InvalidOperationException("Connection string 'DefaultConnection' not found.");
 
 builder.Services.AddDbContext<DatabaseContext>(options =>
     options.UseSqlite(connectionString));
 
+builder.Services.AddAoServices();
 builder.Services.AddSrslyServerSideServices();
 
 builder.Services.AddDatabaseDeveloperPageExceptionFilter();

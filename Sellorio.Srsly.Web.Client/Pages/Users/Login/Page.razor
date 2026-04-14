@@ -1,0 +1,55 @@
+﻿@page "/login"
+@using Sellorio.Results
+@using Sellorio.Srsly.Web.Client.Services
+@layout LoginLayout
+@inject NavigationManager NavigationManager
+@inject IAuthenticationService AuthenticationService
+
+<AoPanel Mode="PanelMode.Form">
+	<AoHeading2>Login</AoHeading2>
+	<AoForm OnValidSubmit="LoginAsync">
+		<AoTextField Label="Username" @bind-Value="username" Required />
+		<AoPasswordField Label="Password" @bind-Value="password" Required />
+		<AoFormButtons>
+			<AoCenter Vertical>
+				<AoSubmit Label="Login" />
+				or
+				<AoButton Label="Register" NoBackground OnClick="GoToRegistration" Disabled="isLoggingIn" />
+			</AoCenter>
+		</AoFormButtons>
+	</AoForm>
+</AoPanel>
+
+@code {
+	string? username;
+	string? password;
+	ValueResult<Models.Users.Login>? loginResult;
+	bool isLoggingIn;
+
+	private void GoToRegistration()
+	{
+		NavigationManager.NavigateTo("/register");
+	}
+
+	private async Task LoginAsync()
+	{
+		if (username is null || password is null)
+		{
+			return;
+		}
+
+		isLoggingIn = true;
+		loginResult = null;
+		loginResult = await AuthenticationService.LoginAsync(new()
+		{
+			Username = username,
+			Password = password
+		});
+		isLoggingIn = false;
+
+		if (loginResult.WasSuccess)
+		{
+			NavigationManager.NavigateTo("/");
+		}
+	}
+}

@@ -1,6 +1,6 @@
 services:
   sellorio.srsly.web:
-    image: ${DOCKER_REGISTRY-}SRSly
+    image: ${DOCKER_REGISTRY-}srsly
     build:
       context: .
       dockerfile: Sellorio.Srsly.Web/Dockerfile

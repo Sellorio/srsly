@@ -1,22 +1,42 @@
 ﻿@using Sellorio.Blazor.Components.Layout
 @using Sellorio.Blazor.Components.Nav
+@using Sellorio.Srsly.Web.Client.Pages
+@using Sellorio.Srsly.Web.Client.Services
+@using System.Net
 @inherits LayoutComponentBase
+@inject IAuthenticationService AuthenticationService
+@inject NavigationManager NavigationManager
 
-<AoPageLayout ApplicationName="SRSly">
-    <NavContent>
-        <AoNavItem Href="/decks" Label="Decks" />
-    </NavContent>
-    <ChildContent>
-        <AoCenter Horizontal>
-            <div style="width:100%;max-width:1600px">
-                @Body
-            </div>
-        </AoCenter>
-    </ChildContent>
-</AoPageLayout>
+<AuthorizeView>
+    <Authorized>
+        <AoPageLayout ApplicationName="SRSly" OnLogoutRequested="LogoutAsync">
+            <NavContent>
+                <AoNavItem Href="/decks" Label="Decks" />
+            </NavContent>
+            <ChildContent>
+                <AoCenter Horizontal>
+                    <div style="width:100%;max-width:1600px">
+                        @Body
+                    </div>
+                </AoCenter>
+            </ChildContent>
+        </AoPageLayout>
+    </Authorized>
+    <NotAuthorized>
+        <RedirectTrigger Href="@($"/login?returnUrl={WebUtility.UrlEncode(NavigationManager.Uri)}")" />
+    </NotAuthorized>
+</AuthorizeView>
 
 <div id="blazor-error-ui" data-nosnippet>
     An unhandled error has occurred.
     <a href="." class="reload">Reload</a>
     <span class="dismiss">🗙</span>
 </div>
+
+@code {
+    async Task LogoutAsync()
+    {
+        await AuthenticationService.LogoutAsync();
+        NavigationManager.NavigateTo("/");
+    }
+}

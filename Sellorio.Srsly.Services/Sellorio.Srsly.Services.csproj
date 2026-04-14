@@ -15,6 +15,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Sellorio.Srsly.Data\Sellorio.Srsly.Data.csproj" />
     <ProjectReference Include="..\Sellorio.Srsly.ServiceInterfaces\Sellorio.Srsly.ServiceInterfaces.csproj" />
+    <ProjectReference Include="..\Sellorio.Srsly.Validation\Sellorio.Srsly.Validation.csproj" />
   </ItemGroup>
 
 </Project>
